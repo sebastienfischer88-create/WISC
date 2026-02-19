@@ -1,74 +1,66 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Configuration de la page
-st.set_page_config(page_title="Expert WISC-V", layout="wide")
+# Configuration pour éviter le scroll
+st.set_page_config(page_title="WISC-V Pro", layout="centered")
 
-st.title("🧠 Analyseur Professionnel WISC-V")
+# CSS personnalisé pour réduire les marges du haut
+st.markdown("""<style>.block-container {padding-top: 1rem; padding-bottom: 0rem;}</style>""", unsafe_allow_html=True)
 
-# --- MENU DE SÉLECTION ---
-mode = st.sidebar.selectbox("Choisir le niveau d'analyse :", ["1. Indices Principaux", "2. Subtests (Détails)"])
+st.title("📊 Analyseur WISC-V")
 
-# Paramètres communs (Intervalle de confiance)
+# --- MENU ---
+mode = st.sidebar.selectbox("Analyse :", ["Indices Principaux", "Subtests (Détails)"])
+
 st.sidebar.markdown("---")
-conf_level = st.sidebar.radio("Niveau de confiance", ["90%", "95%"])
-sem = 4 if mode == "1. Indices Principaux" else 0.8 # SEM réduit pour les subtests
+conf_level = st.sidebar.radio("Confiance", ["90%", "95%"], horizontal=True)
+sem = 4 if mode == "Indices Principaux" else 0.8
 z_score = 1.645 if conf_level == "90%" else 1.96
 margin = round(z_score * sem, 1)
 
-# --- MODE 1 : INDICES ---
-if mode == "1. Indices Principaux":
-    st.sidebar.subheader("Notes d'Indices")
-    icv = st.sidebar.slider("ICV", 45, 155, 100)
-    ivs = st.sidebar.slider("IVS", 45, 155, 100)
-    irf = st.sidebar.slider("IRF", 45, 155, 100)
-    imt = st.sidebar.slider("IMT", 45, 155, 100)
-    ivt = st.sidebar.slider("IVT", 45, 155, 100)
-
+# --- DONNÉES ---
+if mode == "Indices Principaux":
     labels = ['ICV', 'IVS', 'IRF', 'IMT', 'IVT']
-    scores = [icv, ivs, irf, imt, ivt]
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.axhspan(40, 70, facecolor='red', alpha=0.1, label="Déficit (<70)")
-    ax.axhspan(85, 115, facecolor='gray', alpha=0.1, label="Moyenne (85-115)")
-    ax.axhspan(130, 160, facecolor='green', alpha=0.1, label="HPI (>130)")
-    
-    ax.errorbar(labels, scores, yerr=margin, fmt='o-', color='#1f77b4', ecolor='orange', elinewidth=3, capsize=5)
-    ax.set_ylim(40, 160)
-    ax.set_yticks([40, 70, 85, 100, 115, 130, 160])
-    ax.set_title("Profil des Indices (M=100)")
-
-# --- MODE 2 : SUBTESTS ---
+    scores = [st.sidebar.slider(l, 45, 155, 100) for l in labels]
+    y_min, y_max = 40, 160
+    y_ticks = [40, 70, 85, 100, 115, 130, 160]
+    zone_labels = ["Déficit", "Moyenne", "HPI"]
 else:
-    st.sidebar.subheader("Notes Standard")
-    sub_names = ["Similitudes", "Vocabulaire", "Cubes", "Puzzles", "Matrices", "Balances", "Mém. Chiffres", "Mém. Images", "Code", "Symboles"]
-    scores = []
-    for name in sub_names:
-        scores.append(st.sidebar.slider(name, 1, 19, 10))
-    
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.axhspan(1, 7, facecolor='red', alpha=0.1, label="Faiblesse (<7)")
-    ax.axhspan(7, 13, facecolor='gray', alpha=0.1, label="Moyenne (7-13)")
-    ax.axhspan(13, 19, facecolor='green', alpha=0.1, label="Force (>13)")
-    
-    ax.bar(sub_names, scores, color='#3498DB', alpha=0.6)
-    ax.errorbar(sub_names, scores, yerr=margin, fmt='o', color='navy', ecolor='orange', capsize=3)
-    ax.set_ylim(0, 20)
-    ax.set_yticks(range(1, 21))
-    ax.set_title("Profil des Subtests (M=10)")
-    plt.xticks(rotation=45)
+    labels = ["Sim", "Voc", "Cub", "Puz", "Mat", "Bal", "Chi", "Ima", "Cod", "Sym"]
+    scores = [st.sidebar.slider(l, 1, 19, 10) for l in labels]
+    y_min, y_max = 0, 20
+    y_ticks = [1, 7, 10, 13, 19]
+    zone_labels = ["Fragilité", "Moyenne", "Force"]
 
-# --- AFFICHAGE COMMUN ---
+# --- GRAPHIQUE COMPACT ---
+fig, ax = plt.subplots(figsize=(9, 4.5)) # Taille réduite pour éviter le scroll
+
+# Zones colorées uniformes
+ax.axhspan(y_min, y_ticks[1], facecolor='red', alpha=0.08, label=zone_labels[0])
+ax.axhspan(y_ticks[2]-15 if mode=="Indices Principaux" else 7, 
+           y_ticks[4] if mode=="Indices Principaux" else 13, 
+           facecolor='gray', alpha=0.08, label=zone_labels[1])
+ax.axhspan(y_ticks[5] if mode=="Indices Principaux" else 13, y_max, facecolor='green', alpha=0.08, label=zone_labels[2])
+
+# Tracé type profil (Ligne)
+ax.errorbar(labels, scores, yerr=margin, fmt='o-', color='#1f77b4', ecolor='orange', 
+            elinewidth=2, capsize=4, markersize=8, linewidth=2)
+
+# Étiquettes
 for i, s in enumerate(scores):
-    ax.text(i, s + (margin if mode=="2. Subtests (Détails)" else margin+2), str(s), ha='center', fontweight='bold')
+    ax.text(i, s + (margin + 1), str(s), ha='center', fontsize=9, fontweight='bold')
 
-ax.legend(loc='upper right', fontsize='small')
+ax.set_ylim(y_min, y_max)
+ax.set_yticks(y_ticks)
+ax.grid(axis='y', linestyle=':', alpha=0.4)
+ax.legend(loc='lower right', fontsize='x-small', ncol=3)
+
 st.pyplot(fig)
 
-# Analyseur de dispersion
+# --- ANALYSE DYNAMIQUE COURTE ---
 dispersion = max(scores) - min(scores)
-seuil_critique = 23 if mode == "1. Indices Principaux" else 5
-if dispersion >= seuil_critique:
-    st.warning(f"⚠️ Hétérogénéité détectée : Écart de {dispersion} points. L'analyse du score global est compromise.")
+seuil = 23 if mode == "Indices Principaux" else 5
+if dispersion >= seuil:
+    st.warning(f"⚠️ Hétérogénéité : Écart de {dispersion} points.")
 else:
-    st.success(f"✅ Profil homogène (Écart de {dispersion} points).")
+    st.success(f"✅ Profil homogène (Écart : {dispersion}).")
