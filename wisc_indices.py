@@ -2,13 +2,14 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 # Configuration de la page
-st.set_page_config(page_title="WISC-V Indices", layout="wide")
+st.set_page_config(page_title="WISC-V Pro", layout="wide")
 
-# HACK CSS pour supprimer les marges blanches en haut
+# CSS CORRIGÉ : On remet le bouton de la sidebar visible
 st.markdown("""
     <style>
-    .block-container {padding-top: 0.5rem; padding-bottom: 0rem;}
-    header {visibility: hidden;}
+    .block-container {padding-top: 1rem; padding-bottom: 0rem;}
+    /* On s'assure que le bouton pour ouvrir la sidebar (chevron) reste cliquable */
+    section[data-testid="stSidebar"] + div {display: block !important;}
     </style>
     """, unsafe_allow_html=True)
 
