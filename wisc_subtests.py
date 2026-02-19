@@ -3,29 +3,37 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="WISC-V Subtests", layout="wide")
 
-st.markdown("<style>.block-container {padding-top: 1rem;}</style>", unsafe_allow_html=True)
-st.subheader("🧩 Profil Détallé des Subtests (M=10)")
+st.sidebar.header("Notes des Subtests")
+sub_names = ["Similitudes", "Vocabulaire", "Cubes", "Puzzles", "Matrices", 
+             "Balances", "Mémoire Chiffres", "Mémoire Images", "Code", "Symboles"]
 
-sub_names = ["Sim", "Voc", "Cub", "Puz", "Mat", "Bal", "Chi", "Ima", "Cod", "Sym"]
-cols = st.columns(10)
 scores = []
-for i, name in enumerate(sub_names):
-    with cols[i]:
-        scores.append(st.slider(name, 1, 19, 10))
+for name in sub_names:
+    scores.append(st.sidebar.slider(name, 1, 19, 10))
 
-fig, ax = plt.subplots(figsize=(12, 4.5))
-ax.axhspan(1, 7, facecolor='red', alpha=0.08, label="Faiblesse")
-ax.axhspan(7, 13, facecolor='gray', alpha=0.08, label="Moyenne")
-ax.axhspan(13, 19, facecolor='green', alpha=0.08, label="Force")
+# On utilise des abréviations pour l'axe X du graphique
+labels_short = ["Sim", "Voc", "Cub", "Puz", "Mat", "Bal", "Chi", "Ima", "Cod", "Sym"]
 
-ax.errorbar(sub_names, scores, yerr=1.5, fmt='o-', color='#1f77b4', ecolor='orange', elinewidth=3, capsize=6, markersize=10, linewidth=3)
+st.title("🧩 Profil détaillé des Subtests")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.axhspan(1, 7, facecolor='red', alpha=0.1, label="Faiblesse (<7)")
+ax.axhspan(7, 13, facecolor='gray', alpha=0.1, label="Zone Moyenne (7-13)")
+ax.axhspan(13, 19, facecolor='green', alpha=0.1, label="Force (>13)")
+
+ax.errorbar(labels_short, scores, yerr=1.2, fmt='o-', color='#1f77b4', ecolor='orange', 
+            elinewidth=3, capsize=6, markersize=10, linewidth=3)
 
 for i, s in enumerate(scores):
-    ax.text(i, s + 1.2, str(s), ha='center', fontweight='bold')
+    ax.text(i, s + 1.2, str(s), ha='center', fontweight='bold', fontsize=10)
 
 ax.set_ylim(0, 20)
 ax.set_yticks([1, 7, 10, 13, 19])
 ax.grid(axis='y', linestyle=':', alpha=0.3)
-ax.legend(loc='lower right', fontsize='small')
+ax.legend(loc='upper right')
 
 st.pyplot(fig)
+
+dispersion = max(scores) - min(scores)
+if dispersion >= 5:
+    st.info(f"💡 Écart inter-subtests : {dispersion} points.")
