@@ -1,15 +1,12 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Configuration de la page
-st.set_page_config(page_title="WISC-V Pro", layout="wide")
+st.set_page_config(page_title="WISC-V Indices", layout="wide")
 
-# CSS CORRIGÉ : On remet le bouton de la sidebar visible
+# Ajustement des marges : 2rem laisse la place au titre sans créer de scroll
 st.markdown("""
     <style>
-    .block-container {padding-top: 1rem; padding-bottom: 0rem;}
-    /* On s'assure que le bouton pour ouvrir la sidebar (chevron) reste cliquable */
-    section[data-testid="stSidebar"] + div {display: block !important;}
+    .block-container {padding-top: 2rem; padding-bottom: 0rem;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -22,7 +19,7 @@ ivt = st.sidebar.slider("IVT", 45, 155, 100)
 
 st.subheader("📊 Profil des Indices")
 
-# On réduit la hauteur à 3.8 pour que ça tienne sur un écran portable/projecteur
+# Garder la taille compacte pour éviter le scroll
 fig, ax = plt.subplots(figsize=(10, 3.8))
 
 ax.axhspan(40, 70, facecolor='red', alpha=0.08)
@@ -44,7 +41,6 @@ ax.grid(axis='y', linestyle=':', alpha=0.3)
 
 st.pyplot(fig)
 
-# Analyse sur une seule ligne courte
 dispersion = max(scores) - min(scores)
 if dispersion >= 23:
     st.warning(f"⚠️ Hétérogénéité : {dispersion} pts.")
