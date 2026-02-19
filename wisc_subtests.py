@@ -1,15 +1,11 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Configuration de la page
-st.set_page_config(page_title="WISC-V Pro", layout="wide")
+st.set_page_config(page_title="WISC-V Subtests", layout="wide")
 
-# CSS CORRIGÉ : On remet le bouton de la sidebar visible
 st.markdown("""
     <style>
-    .block-container {padding-top: 1rem; padding-bottom: 0rem;}
-    /* On s'assure que le bouton pour ouvrir la sidebar (chevron) reste cliquable */
-    section[data-testid="stSidebar"] + div {display: block !important;}
+    .block-container {padding-top: 2rem; padding-bottom: 0rem;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -22,7 +18,6 @@ labels_short = ["Sim", "Voc", "Cub", "Puz", "Mat", "Bal", "Chi", "Ima", "Cod", "
 
 st.subheader("🧩 Profil des Subtests")
 
-# Hauteur compacte
 fig, ax = plt.subplots(figsize=(10, 3.8))
 
 ax.axhspan(1, 7, facecolor='red', alpha=0.08)
