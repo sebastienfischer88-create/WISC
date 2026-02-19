@@ -1,11 +1,12 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="WISC-V Subtests - Analyse Clinique", layout="wide")
+# Configuration
+st.set_page_config(page_title="WISC-V Subtests", layout="wide")
 
 st.markdown("""
     <style>
-    .block-container {padding-top: 1.5rem; padding-bottom: 0rem;}
+    .block-container {padding-top: 2rem; padding-bottom: 0rem;}
     header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
@@ -21,66 +22,67 @@ groups = {
 }
 
 all_scores = []
+short_labels = []
 for group_name, subs in groups.items():
     st.sidebar.markdown(f"**{group_name}**")
     for full_name, short_name in subs:
         score = st.sidebar.slider(full_name, 1, 19, 10, key=full_name)
         all_scores.append(score)
+        short_labels.append(short_name)
 
 st.subheader("🧩 Profil détaillé des Subtests (Analyse par paires)")
 
-# --- CONFIGURATION GRAPHIQUE ---
+# Graphique
 fig, ax = plt.subplots(figsize=(11, 4.2))
-blue_color = '#1f77b4'  # Bleu professionnel uniforme pour tout
+blue_color = '#1f77b4'
+red_alert = '#d62728'
 
-# Zones de performance discrètes
+# Zones de fond
 ax.axhspan(1, 7, facecolor='red', alpha=0.05)
 ax.axhspan(7, 13, facecolor='gray', alpha=0.05)
 ax.axhspan(13, 19, facecolor='green', alpha=0.05)
 
-short_labels = ["Sim", "Voc", "Cub", "Puz", "Mat", "Bal", "Chi", "Ima", "Cod", "Sym"]
 indices_names = ["ICV", "IVS", "IRF", "IMT", "IVT"]
 
-# Tracé par paires uniformisé en bleu
+# Tracé par paires uniformisé
 for i in range(0, 10, 2):
     pair_scores = all_scores[i:i+2]
     
-    # Ligne et points bleus
-    ax.plot([i, i+1], pair_scores, color=blue_color, marker='o', 
-            linewidth=2.5, markersize=9)
+    # Ligne de liaison entre les deux subtests
+    ax.plot([i, i+1], pair_scores, color=blue_color, linewidth=1.2, alpha=0.3, zorder=1)
     
-    # Barres d'erreur (moustaches) désormais en bleu également
-    ax.errorbar([i, i+1], pair_scores, yerr=1.2, fmt='none', 
-                ecolor=blue_color, elinewidth=1.5, capsize=4, alpha=0.6)
-    
-    # Affichage des notes
-    for j, s in enumerate(pair_scores):
-        ax.text(i+j, s + 1.4, str(s), ha='center', fontweight='bold', color=blue_color, fontsize=10)
+    for j in range(2):
+        idx = i + j
+        score = pair_scores[j]
+        color = red_alert if score < 7 else blue_color
         
-    # Nom de l'indice sous chaque paire
-    ax.text(i + 0.5, -2, indices_names[i//2], ha='center', 
-            fontweight='bold', fontsize=10, color='#555555')
+        # Point affiné
+        ax.plot(idx, score, marker='o', color=color, markersize=7, zorder=3)
+        # Moustache nette
+        ax.errorbar(idx, score, yerr=1.2, fmt='none', ecolor=color, 
+                    elinewidth=1.2, capsize=4, alpha=1.0, zorder=2)
+        # Texte score
+        ax.text(idx, score + 1.4, str(score), ha='center', fontweight='bold', 
+                color=color, fontsize=10)
+
+    # Nom de l'indice
+    ax.text(i + 0.5, -2, indices_names[i//2], ha='center', fontweight='bold', 
+            fontsize=10, color='#555555')
 
 ax.set_ylim(-3, 21)
 ax.set_yticks([1, 7, 10, 13, 19])
 ax.set_xticks(range(10))
 ax.set_xticklabels(short_labels, fontsize=9)
 ax.grid(axis='y', linestyle=':', alpha=0.4)
-
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 st.pyplot(fig)
 
-# --- ANALYSE DYNAMIQUE ---
+# Analyse
 st.markdown("---")
-hétéro = []
-for i, name in enumerate(indices_names):
-    diff = abs(all_scores[i*2] - all_scores[i*2+1])
-    if diff >= 3: 
-        hétéro.append(f"**{name}**")
-
+hétéro = [indices_names[i] for i in range(5) if abs(all_scores[i*2] - all_scores[i*2+1]) >= 3]
 if hétéro:
-    st.warning(f"⚠️ **Hétérogénéité intra-indice :** {', '.join(hétéro)}. La dispersion suggère un fonctionnement irrégulier au sein de ces domaines.")
+    st.warning(f"⚠️ Dissociation intra-indice : {', '.join(hétéro)}.")
 else:
-    st.success("✅ **Profil homogène :** Les capacités mesurées au sein de chaque indice sont cohérentes.")
+    st.success("✅ Profil intra-indice homogène.")
